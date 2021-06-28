@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import it.polito.tdp.PremierLeague.model.Action;
+import it.polito.tdp.PremierLeague.model.Arco;
 import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Player;
 
@@ -89,4 +90,63 @@ public class PremierLeagueDAO {
 		}
 	}
 	
+	public List<Arco> getAllArchi(Integer mese, Double max){
+		String sql = "SELECT  a1.MatchID id1, a2.MatchID id2 , COUNT(DISTINCT a1.PlayerID) AS peso "
+				+ "FROM Actions a1, Actions a2, Matches m1, Matches m2 "
+				+ "WHERE m1.MatchID> m2.MatchID AND m2.MatchID = a2.MatchID AND m1.MatchID = a1.MatchID AND a1.PlayerID = a2.PlayerID AND a1.TimePlayed > ? AND a2.TimePlayed >?  AND MONTH(m1.Date) = ? AND MONTH(m2.Date) = MONTH(m1.Date)"
+				+ "GROUP BY a1.MatchID, a2.MatchID";
+		List<Arco> result = new ArrayList<Arco>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setDouble(1, max);
+			st.setDouble(2, max);
+			st.setInt(3, mese);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				Arco arco = new Arco (res.getInt("id1"), res.getInt("id2"), res.getInt("peso"));
+			
+				result.add(arco);
+
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<Integer> listAllMatchesMese(Integer mese){
+		String sql = "SELECT distinct a.MatchID "
+				+ "FROM Actions a, Matches m "
+				+ "WHERE a.MatchID = m.MatchID AND MONTH(m.Date) = ?";
+		List<Integer> result = new ArrayList<Integer>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, mese);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				
+				Integer id = 0;
+				id = res.getInt("MatchID");
+				
+				
+				result.add(id);
+
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }
